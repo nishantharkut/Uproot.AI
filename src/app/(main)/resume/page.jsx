@@ -1,6 +1,9 @@
 import { getResume } from "@/actions/resume";
 import ResumeBuilder from "./_components/resume-builder";
 
+// Force dynamic rendering to avoid Clerk build issues
+export const dynamic = 'force-dynamic';
+
 export default async function ResumePage() {
   const resume = await getResume();
 

@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React from "react";
 import {
   BarChart,
   Bar,
@@ -20,7 +20,6 @@ import {
   Target,
   Sparkles,
   Clock,
-  Bot,
 } from "lucide-react";
 import { format, formatDistanceToNow } from "date-fns";
 import {
@@ -33,10 +32,10 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { Button } from "@/components/ui/button";
-import Chatbot from "@/components/chatbot";
-
-const DashboardView = ({ insights }) => {
-  const [chatbotOpen, setChatbotOpen] = useState(false);
+import UsageMeters from "@/app/(main)/settings/subscription/_components/usage-meters";
+import Link from "next/link";
+import { ArrowUpRight } from "lucide-react";
+const DashboardView = ({ insights, currentTier = "Free" }) => {
 
   // Transform salary data for the chart
   const salaryData = insights.salaryRanges.map((range) => ({
@@ -85,6 +84,30 @@ const DashboardView = ({ insights }) => {
   return (
     <>
       <div className="space-y-6">
+        {/* Upgrade Banner for Free Tier */}
+        <Card className="bg-gradient-to-r from-tanjiro-green/10 to-earthy-orange/10 border-4 border-tanjiro-green shadow-neu">
+          <CardContent className="p-6 md:p-8">
+            <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+              <div className="flex-1">
+                <h3 className="font-black text-xl md:text-2xl text-charcoal mb-2">
+                  🚀 Unlock Your Full Potential
+                </h3>
+                <p className="text-charcoal/80 font-semibold text-base md:text-lg">
+                  Upgrade to Pro for unlimited access to all features, priority AI processing, and advanced analytics.
+                </p>
+              </div>
+              <Link href="/pricing">
+                <Button className="h-12 md:h-14 px-6 md:px-8 text-base md:text-lg font-black uppercase tracking-wide shadow-neu bg-tanjiro-green hover:bg-tanjiro-green/90 text-cream whitespace-nowrap">
+                  View Plans
+                  <ArrowUpRight className="h-5 w-5 ml-2" />
+                </Button>
+              </Link>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Usage Meters Section */}
+        <UsageMeters currentTier={currentTier} />
         {/* Last Updated Badge */}
         <div className="flex justify-between items-center">
           <div className="flex items-center gap-2 px-4 py-2 bg-white border-3 border-black rounded-lg shadow-neu-sm">
@@ -284,18 +307,6 @@ const DashboardView = ({ insights }) => {
         </Card>
       </div>
       </div>
-
-      {/* Floating Chatbot Button */}
-      <Button
-        onClick={() => setChatbotOpen(true)}
-        size="icon"
-        className="fixed bottom-6 right-6 h-14 w-14 rounded-full shadow-lg hover:shadow-xl transition-shadow z-50"
-      >
-        <Bot className="h-6 w-6" />
-      </Button>
-
-      {/* Chatbot Dialog */}
-      <Chatbot open={chatbotOpen} onOpenChange={setChatbotOpen} />
     </>
   );
 };

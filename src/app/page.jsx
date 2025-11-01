@@ -1,7 +1,7 @@
 import React from "react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
+import { Card, CardContent, CardTitle } from "@/components/ui/card";
 import {
   ArrowRight,
   Trophy,
@@ -11,6 +11,12 @@ import {
   Zap,
   HelpCircle,
   Phone,
+  Crown,
+  Check,
+  PenBox,
+  GraduationCap,
+  FileText,
+  MessageSquare,
 } from "lucide-react";
 import HeroSection from "@/components/hero";
 import {
@@ -137,6 +143,184 @@ export default function LandingPage() {
                 </AccordionItem>
               ))}
             </Accordion>
+          </div>
+        </div>
+      </section>
+
+      {/* Pricing Section */}
+      <section className="w-full py-16 md:py-24 bg-cream relative overflow-hidden">
+        {/* Decorative background */}
+        <div className="absolute inset-0 pattern-slash-diagonal opacity-20"></div>
+        
+        <div className="container mx-auto px-4 md:px-6 relative z-10">
+          <div className="text-center mb-12 md:mb-16">
+            <div className="inline-block mb-6">
+              <div className="px-5 py-3 bg-tanjiro-green/20 border-3 border-black rounded-full text-sm font-bold text-charcoal shadow-neu-sm inline-flex items-center gap-2">
+                <Crown className="w-5 h-5" />
+                <span>PRICING</span>
+              </div>
+            </div>
+            <h2 className="text-4xl md:text-5xl lg:text-6xl font-black text-charcoal logo-font mb-6 text-shadow-medium">
+              SIMPLE, TRANSPARENT
+              <br />
+              <span className="text-tanjiro-green">PRICING</span>
+            </h2>
+            <p className="text-lg md:text-xl text-charcoal font-semibold max-w-2xl mx-auto">
+              Start free and upgrade as you grow. All plans include access to our AI-powered career tools.
+            </p>
+          </div>
+
+          {/* Pricing Cards */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 md:gap-8 max-w-7xl mx-auto mb-12">
+            {/* Free Plan */}
+            <Card className="relative bg-white border-4 border-charcoal shadow-neu hover:shadow-neu-lg hover:scale-105 transition-all">
+              <div className="bg-cream border-b-4 border-black px-6 py-8 text-center">
+                <CardTitle className="text-3xl font-black text-charcoal mb-4">Free</CardTitle>
+                <div className="flex items-baseline justify-center gap-2 mb-3">
+                  <span className="text-5xl md:text-6xl font-black text-charcoal">$0</span>
+                  <span className="text-xl text-charcoal/70 font-semibold">/forever</span>
+                </div>
+                <p className="text-base font-semibold text-charcoal/80">Perfect for getting started</p>
+              </div>
+              <CardContent className="px-6 py-6 space-y-4">
+                <ul className="space-y-3">
+                  <li className="flex items-center gap-3">
+                    <Check className="h-5 w-5 text-tanjiro-green flex-shrink-0" />
+                    <span className="text-sm font-semibold text-charcoal">3 cover letters/month</span>
+                  </li>
+                  <li className="flex items-center gap-3">
+                    <Check className="h-5 w-5 text-tanjiro-green flex-shrink-0" />
+                    <span className="text-sm font-semibold text-charcoal">5 interview quizzes/month</span>
+                  </li>
+                  <li className="flex items-center gap-3">
+                    <Check className="h-5 w-5 text-tanjiro-green flex-shrink-0" />
+                    <span className="text-sm font-semibold text-charcoal">1 resume creation</span>
+                  </li>
+                  <li className="flex items-center gap-3">
+                    <Check className="h-5 w-5 text-tanjiro-green flex-shrink-0" />
+                    <span className="text-sm font-semibold text-charcoal">50 chatbot messages/month</span>
+                  </li>
+                </ul>
+                <Link href="/pricing" className="block mt-6">
+                  <Button
+                    variant="outline"
+                    className="w-full h-12 text-base font-black border-4 border-black hover:bg-cream"
+                  >
+                    View Details
+                  </Button>
+                </Link>
+              </CardContent>
+            </Card>
+
+            {/* Basic Plan - Popular */}
+            <Card className="relative bg-white border-4 border-tanjiro-green shadow-neu-lg hover:shadow-neu-xl hover:scale-110 transition-all">
+              <div className="absolute -top-5 left-1/2 transform -translate-x-1/2 z-10">
+                <div className="px-4 py-2 bg-demon-red text-cream border-4 border-black rounded-full text-xs font-black shadow-neu-sm uppercase tracking-wide">
+                  MOST POPULAR
+                </div>
+              </div>
+              <div className="bg-tanjiro-green border-b-4 border-black px-6 py-8 text-center">
+                <CardTitle className="text-3xl font-black text-cream mb-4 flex items-center justify-center gap-2">
+                  <Sparkles className="h-6 w-6" />
+                  Basic
+                </CardTitle>
+                <div className="flex items-baseline justify-center gap-2 mb-3">
+                  <span className="text-5xl md:text-6xl font-black text-cream">$9.99</span>
+                  <span className="text-xl text-cream/90 font-semibold">/month</span>
+                </div>
+                <p className="text-base font-semibold text-cream/95">For active job seekers</p>
+              </div>
+              <CardContent className="px-6 py-6 space-y-4">
+                <ul className="space-y-3">
+                  <li className="flex items-center gap-3">
+                    <Check className="h-5 w-5 text-tanjiro-green flex-shrink-0" />
+                    <span className="text-sm font-semibold text-charcoal">10 cover letters/month</span>
+                  </li>
+                  <li className="flex items-center gap-3">
+                    <Check className="h-5 w-5 text-tanjiro-green flex-shrink-0" />
+                    <span className="text-sm font-semibold text-charcoal">Unlimited interview quizzes</span>
+                  </li>
+                  <li className="flex items-center gap-3">
+                    <Check className="h-5 w-5 text-tanjiro-green flex-shrink-0" />
+                    <span className="text-sm font-semibold text-charcoal">Unlimited resume versions</span>
+                  </li>
+                  <li className="flex items-center gap-3">
+                    <Check className="h-5 w-5 text-tanjiro-green flex-shrink-0" />
+                    <span className="text-sm font-semibold text-charcoal">Unlimited chatbot access</span>
+                  </li>
+                  <li className="flex items-center gap-3">
+                    <Check className="h-5 w-5 text-tanjiro-green flex-shrink-0" />
+                    <span className="text-sm font-semibold text-charcoal">5 scheduled calls/month</span>
+                  </li>
+                </ul>
+                <Link href="/pricing" className="block mt-6">
+                  <Button
+                    className="w-full h-12 text-base font-black bg-tanjiro-green hover:bg-tanjiro-green/90 text-cream border-4 border-black"
+                  >
+                    Get Started
+                  </Button>
+                </Link>
+              </CardContent>
+            </Card>
+
+            {/* Pro Plan */}
+            <Card className="relative bg-white border-4 border-demon-red shadow-neu hover:shadow-neu-lg hover:scale-105 transition-all">
+              <div className="bg-demon-red border-b-4 border-black px-6 py-8 text-center">
+                <CardTitle className="text-3xl font-black text-cream mb-4 flex items-center justify-center gap-2">
+                  <Crown className="h-6 w-6" />
+                  Pro
+                </CardTitle>
+                <div className="flex items-baseline justify-center gap-2 mb-3">
+                  <span className="text-5xl md:text-6xl font-black text-cream">$19.99</span>
+                  <span className="text-xl text-cream/90 font-semibold">/month</span>
+                </div>
+                <p className="text-base font-semibold text-cream/95">For serious career growth</p>
+              </div>
+              <CardContent className="px-6 py-6 space-y-4">
+                <ul className="space-y-3">
+                  <li className="flex items-center gap-3">
+                    <Check className="h-5 w-5 text-tanjiro-green flex-shrink-0" />
+                    <span className="text-sm font-semibold text-charcoal">Unlimited cover letters</span>
+                  </li>
+                  <li className="flex items-center gap-3">
+                    <Check className="h-5 w-5 text-tanjiro-green flex-shrink-0" />
+                    <span className="text-sm font-semibold text-charcoal">Unlimited quizzes + analytics</span>
+                  </li>
+                  <li className="flex items-center gap-3">
+                    <Check className="h-5 w-5 text-tanjiro-green flex-shrink-0" />
+                    <span className="text-sm font-semibold text-charcoal">Priority AI processing</span>
+                  </li>
+                  <li className="flex items-center gap-3">
+                    <Check className="h-5 w-5 text-tanjiro-green flex-shrink-0" />
+                    <span className="text-sm font-semibold text-charcoal">Unlimited scheduled calls</span>
+                  </li>
+                  <li className="flex items-center gap-3">
+                    <Check className="h-5 w-5 text-tanjiro-green flex-shrink-0" />
+                    <span className="text-sm font-semibold text-charcoal">All export formats</span>
+                  </li>
+                </ul>
+                <Link href="/pricing" className="block mt-6">
+                  <Button
+                    variant="destructive"
+                    className="w-full h-12 text-base font-black bg-demon-red hover:bg-demon-red/90 text-cream border-4 border-black"
+                  >
+                    Get Started
+                  </Button>
+                </Link>
+              </CardContent>
+            </Card>
+          </div>
+
+          {/* View Full Pricing Link */}
+          <div className="text-center">
+            <Link href="/pricing">
+              <Button
+                variant="outline"
+                className="h-14 px-10 text-lg font-black border-4 border-black hover:bg-white"
+              >
+                View Full Pricing Details <ArrowRight className="ml-2 h-5 w-5" />
+              </Button>
+            </Link>
           </div>
         </div>
       </section>

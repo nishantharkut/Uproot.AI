@@ -8,110 +8,97 @@ datasource db {
 }
 
 model User {
-  id            String    @id @default(uuid())
-  clerkUserId   String    @unique // clerk user id
-  email         String    @unique
-  name          String?
-  imageUrl      String?
-  industry      String?    // Combined industry-subindustry (e.g., "tech-software-development")
-  industryInsight IndustryInsight? @relation(fields: [industry], references: [industry])
-  createdAt     DateTime  @default(now())
-  updatedAt     DateTime  @updatedAt
-
-  // Profile fields
-  bio           String?
-  experience    Int?      // Years of experience
-  
-  // Relations
-  skills        String[]  // Array of skills
-  assessments   Assessment[]
-  resume        Resume?
-  coverLetter   CoverLetter[]
-  scheduledCalls ScheduledCall[]
-  callLogs      CallLog[]
+  id               String           @id @default(uuid())
+  clerkUserId      String           @unique
+  email            String           @unique
+  name             String?
+  imageUrl         String?
+  industry         String?
+  createdAt        DateTime         @default(now())
+  updatedAt        DateTime         @updatedAt
+  bio              String?
+  experience       Int?
+  skills           String[]
+  stripeCustomerId String?          @unique
+  assessments      Assessment[]
+  callLogs         CallLog[]
+  coverLetter      CoverLetter[]
+  resume           Resume?
+  scheduledCalls   ScheduledCall[]
+  subscription     Subscription?
+  usageTracking    UsageTracking[]
+  industryInsight  IndustryInsight? @relation(fields: [industry], references: [industry])
 }
 
 model Assessment {
-  id            String    @id @default(cuid())
-  userId        String
-  user          User      @relation(fields: [userId], references: [id])
-  quizScore     Float     // Overall quiz score
-  questions     Json[]    // Array of {question, answer, userAnswer, isCorrect}
-  category      String    // "Technical", "Behavioral", etc.
-  improvementTip String?  // AI-generated improvement tip
-  createdAt     DateTime  @default(now())
-  updatedAt     DateTime  @updatedAt
+  id             String   @id @default(cuid())
+  userId         String
+  quizScore      Float
+  questions      Json[]
+  category       String
+  improvementTip String?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+  user           User     @relation(fields: [userId], references: [id])
 
   @@index([userId])
 }
 
 model Resume {
-  id          String    @id @default(cuid())
-  userId      String    @unique    // One resume per user
-  user        User      @relation(fields: [userId], references: [id])
-  content     String    @db.Text // Markdown content
-  atsScore    Float?
-  feedback    String?
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
+  id        String   @id @default(cuid())
+  userId    String   @unique
+  content   String
+  atsScore  Float?
+  feedback  String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  user      User     @relation(fields: [userId], references: [id])
 }
 
 model CoverLetter {
-  id              String    @id @default(cuid())
-  userId          String
-  user            User      @relation(fields: [userId], references: [id])
-  content         String    // Markdown content
-  jobDescription  String?
-  companyName     String    // Name of the company applying to
-  jobTitle        String    // Position applying for
-  status          String    @default("draft") // draft, completed
-  createdAt       DateTime  @default(now())
-  updatedAt       DateTime  @updatedAt
+  id             String   @id @default(cuid())
+  userId         String
+  content        String
+  jobDescription String?
+  companyName    String
+  jobTitle       String
+  status         String   @default("draft")
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+  user           User     @relation(fields: [userId], references: [id])
 
   @@index([userId])
 }
 
-// Combined Industry Trends and Salary Insights
 model IndustryInsight {
-  id            String    @id @default(cuid())
-  industry      String    @unique  // The industry this data belongs to (e.g., "tech-software-development")
-  
-  // Users in this industry
-  users         User[]
-  
-  // Salary data
-  salaryRanges  Json[]    // Array of { role: string, min: float, max: float, median: float, location: string? }
-  
-  // Industry trends
-  growthRate    Float     // Industry growth rate
-  demandLevel   String    // "High", "Medium", "Low"
-  topSkills     String[]  // Most in-demand skills
-  
-  // Market conditions
-  marketOutlook String    // "Positive", "Neutral", "Negative"
-  keyTrends     String[]  // Array of current industry trends
-  
-  // Learning suggestions
-  recommendedSkills String[]  // Skills recommended for the industry
-  
-  lastUpdated   DateTime  @default(now())
-  nextUpdate    DateTime  // Scheduled update time
+  id                String   @id @default(cuid())
+  industry          String   @unique
+  salaryRanges      Json[]
+  growthRate        Float
+  demandLevel       String
+  topSkills         String[]
+  marketOutlook     String
+  keyTrends         String[]
+  recommendedSkills String[]
+  lastUpdated       DateTime @default(now())
+  nextUpdate        DateTime
+  users             User[]
 
   @@index([industry])
 }
 
 model ScheduledCall {
-  id            String    @id @default(uuid())
-  userId        String
-  user          User      @relation(fields: [userId], references: [id])
-  phoneNumber   String    // Recipient phone number
-  scheduledTime DateTime  // When the call should be made
-  recipientName String?   // Optional name of recipient
-  status        String    @default("scheduled") // scheduled, completed, failed, cancelled
-  inngestEventId String?  // Inngest event ID for tracking
-  createdAt     DateTime  @default(now())
-  updatedAt     DateTime  @updatedAt
-  callLog       CallLog?
+  id             String   @id @default(uuid())
+  userId         String
+  phoneNumber    String
+  scheduledTime  DateTime
+  recipientName  String?
+  status         String   @default("scheduled")
+  inngestEventId String?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+  callLog        CallLog?
+  user           User     @relation(fields: [userId], references: [id])
 
   @@index([userId])
   @@index([scheduledTime])
@@ -119,24 +106,62 @@ model ScheduledCall {
 }
 
 model CallLog {
-  id              String    @id @default(uuid())
+  id              String         @id @default(uuid())
   userId          String
-  user            User      @relation(fields: [userId], references: [id])
-  scheduledCallId String?   @unique
-  scheduledCall   ScheduledCall? @relation(fields: [scheduledCallId], references: [id])
-  phoneNumber     String    // Recipient phone number
+  scheduledCallId String?        @unique
+  phoneNumber     String
   recipientName   String?
-  status          String    // completed, failed, no_answer, busy, cancelled
-  duration        Int?      // Duration in seconds
+  status          String
+  duration        Int?
   startedAt       DateTime?
   endedAt         DateTime?
-  recordingUrl    String?   // URL to call recording if available
-  transcript      String?   // Call transcript if available
-  errorMessage    String?   // Error message if call failed
-  createdAt       DateTime  @default(now())
-  updatedAt       DateTime  @updatedAt
+  recordingUrl    String?
+  transcript      String?
+  errorMessage    String?
+  createdAt       DateTime       @default(now())
+  updatedAt       DateTime       @updatedAt
+  scheduledCall   ScheduledCall? @relation(fields: [scheduledCallId], references: [id])
+  user            User           @relation(fields: [userId], references: [id])
 
   @@index([userId])
   @@index([status])
   @@index([createdAt])
+}
+
+model Subscription {
+  id                   String    @id @default(uuid())
+  userId               String    @unique
+  stripeSubscriptionId String?   @unique
+  tier                 String    @default("Free")
+  status               String    @default("active")
+  currentPeriodStart   DateTime?
+  currentPeriodEnd     DateTime?
+  cancelAtPeriodEnd    Boolean   @default(false)
+  canceledAt           DateTime?
+  createdAt            DateTime  @default(now())
+  updatedAt            DateTime  @updatedAt
+  stripeCustomerId     String?
+  stripePriceId        String?
+  user                 User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([stripeSubscriptionId])
+  @@index([stripeCustomerId])
+  @@index([stripePriceId])
+}
+
+model UsageTracking {
+  id        String   @id @default(uuid())
+  userId    String
+  feature   String
+  count     Int      @default(0)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  month     DateTime
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, feature, month])
+  @@index([userId])
+  @@index([month])
+  @@index([feature])
 }

@@ -3,6 +3,7 @@
 import { db } from "@/lib/prisma";
 import { auth } from "@clerk/nextjs/server";
 import OpenAI from "openai";
+import { useFeature } from "@/actions/usage";
 
 const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 
@@ -19,6 +20,9 @@ export async function generateQuiz() {
   });
 
   if (!user) throw new Error("User not found");
+
+  // Check and increment usage for quiz
+  await useFeature("quiz");
 
   const prompt = `
     Generate 10 technical interview questions for a ${

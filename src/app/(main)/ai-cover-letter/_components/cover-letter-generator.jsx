@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useCallback } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { toast } from "sonner";
@@ -40,20 +40,44 @@ export default function CoverLetterGenerator() {
     data: generatedLetter,
   } = useFetch(generateCoverLetter);
 
+  // Handle redirection after successful generation
+  const handleRedirect = useCallback((letter) => {
+    if (letter?.id) {
+      toast.success("Cover letter generated successfully!");
+      router.push(`/ai-cover-letter/${letter.id}`);
+      reset();
+    }
+  }, [router, reset]);
+
   // Update content when letter is generated
   useEffect(() => {
     if (generatedLetter) {
-      toast.success("Cover letter generated successfully!");
-      router.push(`/ai-cover-letter/${generatedLetter.id}`);
-      reset();
+      handleRedirect(generatedLetter);
     }
-  }, [generatedLetter]);
+  }, [generatedLetter, handleRedirect]);
 
   const onSubmit = async (data) => {
     try {
-      await generateLetterFn(data);
+      const result = await generateLetterFn(data);
+      if (!result?.id) {
+        throw new Error("Failed to generate cover letter - no ID returned");
+      }
     } catch (error) {
-      toast.error(error.message || "Failed to generate cover letter");
+      const errorMessage = error.message || "Failed to generate cover letter";
+      
+      // Check if it's a usage limit error
+      if (errorMessage.includes("monthly limit") || errorMessage.includes("upgrade")) {
+        toast.error(errorMessage, {
+          duration: 5000,
+          action: {
+            label: "Upgrade Now",
+            onClick: () => router.push("/pricing"),
+          },
+        });
+      } else {
+        toast.error(errorMessage);
+      }
+      console.error("Cover letter generation error:", error);
     }
   };
 
