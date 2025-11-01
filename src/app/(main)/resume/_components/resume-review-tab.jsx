@@ -25,6 +25,8 @@ import {
   AccordionTrigger,
 } from "@/components/ui/accordion";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { reviewUploadedResume } from "@/actions/resume-reviewer";
 import { toast } from "sonner";
 
@@ -39,6 +41,7 @@ export default function ResumeReviewTab({
   const [reviewMode, setReviewMode] = useState("saved"); // "saved" or "upload"
   const [uploadedFile, setUploadedFile] = useState(null);
   const [uploadedFileName, setUploadedFileName] = useState("");
+  const [resumeTitle, setResumeTitle] = useState("");
   const [isUploading, setIsUploading] = useState(false);
   const [isExtracting, setIsExtracting] = useState(false);
   const [internalReviewData, setInternalReviewData] = useState(externalReviewData);
@@ -86,11 +89,17 @@ export default function ResumeReviewTab({
   const handleRemoveFile = () => {
     setUploadedFile(null);
     setUploadedFileName("");
+    setResumeTitle("");
   };
 
   const handleUploadAndReview = async () => {
     if (!uploadedFile) {
       toast.error("Please select a file first");
+      return;
+    }
+
+    if (!resumeTitle || resumeTitle.trim().length === 0) {
+      toast.error("Please enter a resume title (e.g., 'SDE Resume', 'Finance Resume')");
       return;
     }
 
@@ -101,8 +110,10 @@ export default function ResumeReviewTab({
       // Upload file and extract text
       const formData = new FormData();
       formData.append("file", uploadedFile);
+      formData.append("save", "true"); // Tell API to save as new resume
+      formData.append("title", resumeTitle.trim()); // Add resume title
 
-      const uploadResponse = await fetch("/api/resume/upload", {
+      const uploadResponse = await fetch("/api/resume/upload?save=true", {
         method: "POST",
         body: formData,
       });
@@ -112,7 +123,8 @@ export default function ResumeReviewTab({
         throw new Error(error.error || "Failed to upload file");
       }
 
-      const { content } = await uploadResponse.json();
+      const uploadResult = await uploadResponse.json();
+      const { content, version, resume } = uploadResult;
 
       if (!content || content.trim().length === 0) {
         throw new Error("Could not extract text from file");
@@ -121,10 +133,21 @@ export default function ResumeReviewTab({
       setIsExtracting(false);
       setInternalIsReviewing(true);
 
-      // Review the extracted content
-      const review = await reviewUploadedResume(content);
+      // Review the extracted content and save review to the version
+      // Pass resume.id to ensure review is saved to the correct resume version
+      const review = await reviewUploadedResume(content, true, resume?.id || null);
       setInternalReviewData(review);
-      toast.success("Resume reviewed successfully!");
+      
+      // Clear the form after successful upload
+      setUploadedFile(null);
+      setUploadedFileName("");
+      setResumeTitle("");
+      
+      if (resume && version) {
+        toast.success(`Resume "${resume.title}" uploaded, saved, and reviewed successfully!`);
+      } else {
+        toast.success("Resume reviewed successfully!");
+      }
     } catch (error) {
       console.error("Upload and review error:", error);
       toast.error(error.message || "Failed to upload and review resume");
@@ -222,10 +245,28 @@ export default function ResumeReviewTab({
             <CardHeader>
               <CardTitle>Upload Your Resume</CardTitle>
               <CardDescription>
-                Upload a PDF, DOC, DOCX, or TXT file to get it reviewed by UpRoot AI
+                Upload a PDF, DOC, DOCX, or TXT file to get it reviewed by UpRoot AI. Give your resume a name to identify it later.
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
+              {/* Resume Title Input */}
+              <div className="space-y-2">
+                <Label htmlFor="resume-title">
+                  Resume Title <span className="text-red-500">*</span>
+                </Label>
+                <Input
+                  id="resume-title"
+                  type="text"
+                  placeholder="e.g., SDE Resume, Finance Resume, Marketing Resume"
+                  value={resumeTitle}
+                  onChange={(e) => setResumeTitle(e.target.value)}
+                  disabled={isUploading || isReviewing || isExtracting}
+                />
+                <p className="text-xs text-muted-foreground">
+                  Give your resume a descriptive name to easily identify it later
+                </p>
+              </div>
+
               {!uploadedFile ? (
                 <div className="border-2 border-dashed rounded-lg p-8 text-center">
                   <Upload className="h-12 w-12 mx-auto mb-4 text-muted-foreground" />
@@ -280,7 +321,7 @@ export default function ResumeReviewTab({
                     </Button>
                     <Button
                       onClick={handleUploadAndReview}
-                      disabled={isUploading || isReviewing || isExtracting}
+                      disabled={isUploading || isReviewing || isExtracting || !resumeTitle.trim()}
                     >
                       {isExtracting ? (
                         <>

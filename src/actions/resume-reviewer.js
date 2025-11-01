@@ -17,18 +17,31 @@ export async function reviewResume() {
   const user = await db.user.findUnique({
     where: { clerkUserId: userId },
     include: {
-      resume: true,
       industryInsight: true,
     },
   });
 
   if (!user) throw new Error("User not found");
 
-  if (!user.resume || !user.resume.content) {
+  // Get the most recent resume's current version
+  const resume = await db.resume.findFirst({
+    where: { userId: user.id },
+    include: {
+      versions: {
+        where: { isCurrent: true },
+        orderBy: { createdAt: "desc" },
+        take: 1,
+      },
+    },
+    orderBy: { createdAt: "desc" },
+  });
+
+  if (!resume || resume.versions.length === 0 || !resume.versions[0].content) {
     throw new Error("No resume found. Please create a resume first.");
   }
 
-  const resumeContent = user.resume.content;
+  const currentVersion = resume.versions[0];
+  const resumeContent = currentVersion.content;
   const industry = user.industry || "General";
   const experience = user.experience || 0;
   const skills = user.skills || [];
@@ -132,7 +145,7 @@ Provide actionable, specific feedback that the user can implement immediately.`;
           },
         ],
         enhancedSections: {
-          summary: user.resume.content.split("\n")[0] || "Professional summary",
+          summary: resumeContent.split("\n")[0] || "Professional summary",
           skills: "Skills section",
         },
         atsOptimization: [
@@ -145,10 +158,10 @@ Provide actionable, specific feedback that the user can implement immediately.`;
       };
     }
 
-    // Update resume with ATS score and feedback
-    await db.resume.update({
+    // Update current version with ATS score and feedback
+    await db.resumeVersion.update({
       where: {
-        userId: user.id,
+        id: currentVersion.id,
       },
       data: {
         atsScore: reviewData.atsScore || null,
@@ -209,8 +222,12 @@ Return ONLY the enhanced ${sectionName} content, no explanations or additional t
 
 /**
  * Review uploaded resume content (for file uploads)
+ * This will review the content and optionally save it as a new version
+ * @param {string} resumeContent - The resume content to review
+ * @param {boolean} saveAsVersion - Whether to save the review to a version
+ * @param {string} resumeId - Optional resume ID to save review to (if not provided, uses most recent)
  */
-export async function reviewUploadedResume(resumeContent) {
+export async function reviewUploadedResume(resumeContent, saveAsVersion = false, resumeId = null) {
   const { userId } = await auth();
   if (!userId) throw new Error("Unauthorized");
 
@@ -343,6 +360,51 @@ Provide actionable, specific feedback that the user can implement immediately.`;
       };
     }
 
+    // If saveAsVersion is true, save the review to the current version
+    if (saveAsVersion) {
+      let resume;
+      
+      if (resumeId) {
+        // Get specific resume by ID
+        resume = await db.resume.findFirst({
+          where: {
+            id: resumeId,
+            userId: user.id, // Verify ownership
+          },
+          include: {
+            versions: {
+              where: { isCurrent: true },
+              orderBy: { createdAt: "desc" },
+              take: 1,
+            },
+          },
+        });
+      } else {
+        // Get the most recently updated resume (most likely the one just created/updated)
+        resume = await db.resume.findFirst({
+          where: { userId: user.id },
+          include: {
+            versions: {
+              where: { isCurrent: true },
+              orderBy: { createdAt: "desc" },
+              take: 1,
+            },
+          },
+          orderBy: { updatedAt: "desc" },
+        });
+      }
+
+      if (resume && resume.versions.length > 0) {
+        await db.resumeVersion.update({
+          where: { id: resume.versions[0].id },
+          data: {
+            atsScore: reviewData.atsScore || null,
+            feedback: JSON.stringify(reviewData),
+          },
+        });
+      }
+    }
+
     return reviewData;
   } catch (error) {
     console.error("Error reviewing uploaded resume:", error);
@@ -351,7 +413,7 @@ Provide actionable, specific feedback that the user can implement immediately.`;
 }
 
 /**
- * Get resume review history/previous feedback
+ * Get resume review history/previous feedback for current version
  */
 export async function getResumeReview() {
   const { userId } = await auth();
@@ -363,18 +425,61 @@ export async function getResumeReview() {
 
   if (!user) throw new Error("User not found");
 
-  const resume = await db.resume.findUnique({
-    where: {
-      userId: user.id,
+  // Get the most recent resume's current version review
+  const resume = await db.resume.findFirst({
+    where: { userId: user.id },
+    include: {
+      versions: {
+        where: { isCurrent: true },
+        orderBy: { createdAt: "desc" },
+        take: 1,
+      },
     },
+    orderBy: { createdAt: "desc" },
   });
 
-  if (!resume || !resume.feedback) {
+  if (!resume || resume.versions.length === 0 || !resume.versions[0].feedback) {
     return null;
   }
 
   try {
-    return JSON.parse(resume.feedback);
+    return JSON.parse(resume.versions[0].feedback);
+  } catch (error) {
+    console.error("Error parsing feedback:", error);
+    return null;
+  }
+}
+
+/**
+ * Get review feedback for a specific version
+ */
+export async function getResumeReviewForVersion(versionId) {
+  const { userId } = await auth();
+  if (!userId) throw new Error("Unauthorized");
+
+  const user = await db.user.findUnique({
+    where: { clerkUserId: userId },
+  });
+
+  if (!user) throw new Error("User not found");
+
+  const version = await db.resumeVersion.findUnique({
+    where: { id: versionId },
+    include: {
+      resume: true,
+    },
+  });
+
+  if (!version || version.resume.userId !== user.id) {
+    throw new Error("Version not found or unauthorized");
+  }
+
+  if (!version.feedback) {
+    return null;
+  }
+
+  try {
+    return JSON.parse(version.feedback);
   } catch (error) {
     console.error("Error parsing feedback:", error);
     return null;

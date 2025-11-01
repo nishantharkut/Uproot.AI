@@ -43,7 +43,16 @@ export default function RootLayout({ children }) {
           >
             <Header />
             <main className="min-h-screen">{children}</main>
-            <Toaster richColors />
+            <Toaster 
+              richColors 
+              position="bottom-right"
+              toastOptions={{
+                style: {
+                  marginBottom: '20px',
+                  marginRight: '20px',
+                },
+              }}
+            />
           </ThemeProvider>
         </body>
       </html>
