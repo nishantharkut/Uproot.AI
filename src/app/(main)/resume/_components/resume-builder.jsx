@@ -17,6 +17,7 @@ import {
   GraduationCap,
   Rocket,
   Sparkles,
+  List as ListIcon,
 } from "lucide-react";
 import { toast } from "sonner";
 import MDEditor from "@uiw/react-md-editor";
@@ -24,15 +25,15 @@ import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
-import { saveResume } from "@/actions/resume";
+import { saveResume, getAllResumes } from "@/actions/resume";
 import { reviewResume, getResumeReview } from "@/actions/resume-reviewer";
 import { EntryForm } from "./entry-form";
 import ResumeReviewTab from "./resume-review-tab";
+import ResumeListTab from "./resume-list-tab";
 import useFetch from "@/hooks/use-fetch";
 import { useUser } from "@clerk/nextjs";
 import { entriesToMarkdown } from "@/app/lib/helper";
 import { resumeSchema } from "@/app/lib/schema";
-import html2pdf from "html2pdf.js/dist/html2pdf"
 
 export default function ResumeBuilder({ initialContent }) {
   const [activeTab, setActiveTab] = useState("edit");
@@ -71,7 +72,10 @@ export default function ResumeBuilder({ initialContent }) {
   const formValues = watch();
 
   useEffect(() => {
-    if (initialContent) setActiveTab("preview");
+    if (initialContent) {
+      setActiveTab("preview");
+      setPreviewContent(initialContent);
+    }
   }, [initialContent]);
 
   // Update preview content when form values change
@@ -127,6 +131,14 @@ export default function ResumeBuilder({ initialContent }) {
     setIsGenerating(true);
     try {
       const element = document.getElementById("resume-pdf");
+      if (!element) {
+        throw new Error("Resume preview element not found");
+      }
+
+      // Dynamically import html2pdf when needed (it's already set up as dynamic import)
+      const html2pdfModule = await import("html2pdf.js/dist/html2pdf");
+      const html2pdf = html2pdfModule.default;
+
       const opt = {
         margin: [15, 15],
         filename: "resume.pdf",
@@ -136,8 +148,10 @@ export default function ResumeBuilder({ initialContent }) {
       };
 
       await html2pdf().set(opt).from(element).save();
+      toast.success("PDF generated successfully!");
     } catch (error) {
       console.error("PDF generation error:", error);
+      toast.error("Failed to generate PDF. Please try again.");
     } finally {
       setIsGenerating(false);
     }
@@ -213,7 +227,7 @@ export default function ResumeBuilder({ initialContent }) {
       {/* Tabs Section */}
       <div className="bg-white border-4 border-black rounded-xl shadow-neu p-4">
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-          <TabsList className="w-full grid grid-cols-3 h-14">
+          <TabsList className="w-full grid grid-cols-4 h-14">
             <TabsTrigger value="edit" className="text-base font-bold data-[state=active]:shadow-neu-sm">
               <Edit className="h-5 w-5 mr-2" />
               Edit Form
@@ -221,6 +235,10 @@ export default function ResumeBuilder({ initialContent }) {
             <TabsTrigger value="preview" className="text-base font-bold data-[state=active]:shadow-neu-sm">
               <Monitor className="h-5 w-5 mr-2" />
               Preview
+            </TabsTrigger>
+            <TabsTrigger value="resumes" className="text-base font-bold data-[state=active]:shadow-neu-sm">
+              <ListIcon className="h-5 w-5 mr-2" />
+              See Resumes
             </TabsTrigger>
             <TabsTrigger value="review" className="text-base font-bold data-[state=active]:shadow-neu-sm">
               <Sparkles className="h-5 w-5 mr-2" />
@@ -536,6 +554,10 @@ export default function ResumeBuilder({ initialContent }) {
               />
             </div>
             </div>
+          </TabsContent>
+
+          <TabsContent value="resumes" className="space-y-0 mt-6">
+            <ResumeListTab />
           </TabsContent>
 
           <TabsContent value="review" className="space-y-0 mt-6">

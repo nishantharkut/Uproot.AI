@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { auth } from "@clerk/nextjs/server";
+import { createResumeWithUpload, uploadResumeVersion } from "@/actions/resume";
 
 export async function POST(req) {
   try {
@@ -51,18 +52,34 @@ export async function POST(req) {
       );
     }
 
+    // Check if we should save this as a version (store buffer if needed)
+    const url = new URL(req.url);
+    const shouldSave = url.searchParams.get("save") === "true" || formData.get("save") === "true";
+    const resumeTitle = formData.get("title")?.trim() || url.searchParams.get("title")?.trim();
+    const resumeId = formData.get("resumeId")?.trim() || url.searchParams.get("resumeId")?.trim();
+    let fileBuffer = null; // Store buffer for Cloudinary upload if saving
+
     let extractedText = "";
 
     // Handle different file types
     if (fileName.endsWith(".txt") || fileType === "text/plain") {
       // Plain text file
       extractedText = await file.text();
+      // Store buffer for saving if needed
+      if (shouldSave) {
+        const arrayBuffer = await file.arrayBuffer();
+        fileBuffer = Buffer.from(arrayBuffer);
+      }
     } else if (fileName.endsWith(".pdf") || fileType === "application/pdf") {
       // PDF file - use pdf-parse library for reliable text extraction
       try {
         const pdfParse = (await import("pdf-parse")).default;
         const arrayBuffer = await file.arrayBuffer();
         const buffer = Buffer.from(arrayBuffer);
+        // Store buffer for saving if needed
+        if (shouldSave) {
+          fileBuffer = buffer;
+        }
         
         const pdfData = await pdfParse(buffer);
         extractedText = pdfData.text || "";
@@ -116,60 +133,13 @@ export async function POST(req) {
         }
       } catch (error) {
         console.error("Error extracting PDF text:", error);
-        
-        // If pdf-parse fails, try OpenAI Vision as fallback
-        try {
-          const arrayBuffer = await file.arrayBuffer();
-          const buffer = Buffer.from(arrayBuffer);
-          
-          if (file.size > 20 * 1024 * 1024) {
-            return NextResponse.json(
-              { error: "Failed to extract text from PDF. File may be too large or corrupted. Please try a smaller file or convert to TXT." },
-              { status: 400 }
-            );
-          }
-
-          const base64 = buffer.toString("base64");
-          const { default: OpenAI } = await import("openai");
-          const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
-
-          const response = await openai.chat.completions.create({
-            model: "gpt-4o",
-            messages: [
-              {
-                role: "user",
-                content: [
-                  {
-                    type: "text",
-                    text: "Extract all text from this resume document. Return ONLY the raw text content, preserving the structure and formatting. Do not add any analysis, commentary, or markdown formatting. Just return the text as-is.",
-                  },
-                  {
-                    type: "image_url",
-                    image_url: {
-                      url: `data:${fileType};base64,${base64}`,
-                    },
-                  },
-                ],
-              },
-            ],
-            max_tokens: 4000,
-          });
-
-          extractedText = response.choices[0].message.content || "";
-          
-          if (!extractedText || extractedText.trim().length < 50) {
-            return NextResponse.json(
-              { error: "Failed to extract text from PDF. The PDF may be corrupted, password-protected, or image-only. Please ensure your PDF contains readable text or convert it to TXT format." },
-              { status: 500 }
-            );
-          }
-        } catch (fallbackError) {
-          console.error("Fallback PDF extraction also failed:", fallbackError);
-          return NextResponse.json(
-            { error: "Failed to extract text from PDF. Please ensure your PDF contains readable, selectable text or convert it to TXT format." },
-            { status: 500 }
-          );
-        }
+        // Only use text extracted by pdf-parse, no image/vision fallback
+        return NextResponse.json(
+          { 
+            error: "Failed to extract text from PDF. Please ensure your PDF contains selectable text (not just images/scans). If your PDF is an image scan, please use OCR software to convert it to text first, or upload a .txt file with the resume content." 
+          },
+          { status: 400 }
+        );
       }
     } else if (fileName.endsWith(".docx") || fileType === "application/vnd.openxmlformats-officedocument.wordprocessingml.document") {
       // DOCX file - try to install mammoth or use alternative
@@ -190,6 +160,51 @@ export async function POST(req) {
         { error: "Could not extract text from file. Please ensure the file contains readable text." },
         { status: 400 }
       );
+    }
+
+    // If save is requested, upload to Cloudinary and create a version or new resume
+    if (shouldSave && fileBuffer) {
+      try {
+        let result;
+        
+        if (resumeId) {
+          // Uploading a new version to existing resume
+          result = await uploadResumeVersion(resumeId, fileBuffer, extractedText, file.name);
+        } else if (resumeTitle) {
+          // Creating a new named resume
+          result = await createResumeWithUpload(resumeTitle, fileBuffer, extractedText, file.name);
+        } else {
+          return NextResponse.json(
+            { error: "Either resumeId (for new version) or title (for new resume) is required when saving." },
+            { status: 400 }
+          );
+        }
+        
+        return NextResponse.json({
+          success: true,
+          content: extractedText,
+          fileName: file.name,
+          resume: {
+            id: result.resume.id,
+            title: result.resume.title,
+            publicLinkId: result.resume.publicLinkId,
+          },
+          version: {
+            id: result.version.id,
+            versionNumber: result.version.versionNumber,
+            cloudinaryUrl: result.version.cloudinaryUrl,
+          },
+        });
+      } catch (saveError) {
+        console.error("Error saving resume version:", saveError);
+        // Still return the extracted text even if save fails
+        return NextResponse.json({
+          success: true,
+          content: extractedText,
+          fileName: file.name,
+          warning: "File uploaded and text extracted, but failed to save version. Please try saving manually.",
+        });
+      }
     }
 
     return NextResponse.json({
