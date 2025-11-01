@@ -1,7 +1,7 @@
 "use server";
 
 import { db } from "@/lib/prisma";
-import { auth } from "@clerk/nextjs/server";
+import { auth, currentUser } from "@clerk/nextjs/server";
 import { revalidatePath } from "next/cache";
 import { generateAIInsights } from "./dashboard";
 
@@ -9,16 +9,36 @@ export async function updateUser(data) {
   const { userId } = await auth();
   if (!userId) throw new Error("Unauthorized");
 
-  const user = await db.user.findUnique({
-    where: { clerkUserId: userId },
-  });
-
-  if (!user) throw new Error("User not found");
+  // Get user from Clerk to create new user if needed
+  const clerkUser = await currentUser();
 
   try {
     // Start a transaction to handle both operations
     const result = await db.$transaction(
       async (tx) => {
+        // Check if user exists, create if not
+        let user = await tx.user.findUnique({
+          where: { clerkUserId: userId },
+        });
+
+        if (!user) {
+          // Create new user if they don't exist
+          if (!clerkUser) {
+            throw new Error("Clerk user not found");
+          }
+
+          const name = `${clerkUser.firstName || ""} ${clerkUser.lastName || ""}`.trim() || "User";
+          
+          user = await tx.user.create({
+            data: {
+              clerkUserId: userId,
+              name,
+              imageUrl: clerkUser.imageUrl,
+              email: clerkUser.emailAddresses[0]?.emailAddress || "",
+            },
+          });
+        }
+
         // First check if industry exists
         let industryInsight = await tx.industryInsight.findUnique({
           where: {
@@ -30,7 +50,7 @@ export async function updateUser(data) {
         if (!industryInsight) {
           const insights = await generateAIInsights(data.industry);
 
-          industryInsight = await db.industryInsight.create({
+          industryInsight = await tx.industryInsight.create({
             data: {
               industry: data.industry,
               ...insights,
@@ -60,7 +80,7 @@ export async function updateUser(data) {
     );
 
     revalidatePath("/");
-    return result.user;
+    return { success: true, user: result.updatedUser };
   } catch (error) {
     console.error("Error updating user and industry:", error.message);
     throw new Error("Failed to update profile");
