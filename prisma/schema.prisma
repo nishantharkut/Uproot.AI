@@ -22,6 +22,10 @@ model User {
   bio           String?
   experience    Int?      // Years of experience
   
+  // Payment
+  stripeCustomerId String?   @unique // Stripe customer ID for Stripe payments
+  walletAddress String?   @unique // Ethereum wallet address for MetaMask payments
+  
   // Relations
   skills        String[]  // Array of skills
   assessments   Assessment[]
@@ -29,6 +33,8 @@ model User {
   coverLetter   CoverLetter[]
   scheduledCalls ScheduledCall[]
   callLogs      CallLog[]
+  subscription  Subscription?
+  usageTracking UsageTracking[]
 }
 
 model Assessment {
@@ -36,7 +42,7 @@ model Assessment {
   userId        String
   user          User      @relation(fields: [userId], references: [id])
   quizScore     Float     // Overall quiz score
-  questions     Json[]    // Array of {question, answer, userAnswer, isCorrect}
+  questions     Json[]    // Array of {question, answer, userAnswer, isCorrect} 
   category      String    // "Technical", "Behavioral", etc.
   improvementTip String?  // AI-generated improvement tip
   createdAt     DateTime  @default(now())
@@ -48,7 +54,7 @@ model Assessment {
 model Resume {
   id              String    @id @default(cuid())
   userId          String    // Multiple resumes per user allowed
-  user            User      @relation(fields: [userId], references: [id])
+  user            User      @relation(fields: [userId], references: [id])       
   title           String    // Name/title of the resume (e.g., "SDE Resume", "Finance Resume")
   publicLinkId    String    @unique    // Unique identifier for the shareable public link
   currentVersionId String?  // Points to the current ResumeVersion
@@ -57,7 +63,7 @@ model Resume {
   updatedAt       DateTime  @updatedAt
 
   @@index([userId])
-  @@unique([userId, title])  // User can't have two resumes with same title
+  @@unique([userId, title])  // User can't have two resumes with same title     
 }
 
 model ResumeVersion {
@@ -66,21 +72,21 @@ model ResumeVersion {
   resume        Resume    @relation(fields: [resumeId], references: [id], onDelete: Cascade)
   versionNumber Int       @default(1)
   isCurrent     Boolean   @default(false)
-  
+
   // Content
   content       String    @db.Text // Markdown/text content
-  
+
   // File storage
   cloudinaryUrl String?   // URL to the PDF stored in Cloudinary
   fileName      String?   // Original file name
-  
+
   // Review data
   atsScore      Float?
   feedback      String?   @db.Text // JSON string of review feedback
-  
+
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
-  
+
   @@index([resumeId])
   @@index([isCurrent])
   @@unique([resumeId, versionNumber])
@@ -89,7 +95,7 @@ model ResumeVersion {
 model CoverLetter {
   id              String    @id @default(cuid())
   userId          String
-  user            User      @relation(fields: [userId], references: [id])
+  user            User      @relation(fields: [userId], references: [id])       
   content         String    // Markdown content
   jobDescription  String?
   companyName     String    // Name of the company applying to
@@ -101,29 +107,28 @@ model CoverLetter {
   @@index([userId])
 }
 
-// Combined Industry Trends and Salary Insights
 model IndustryInsight {
   id            String    @id @default(cuid())
   industry      String    @unique  // The industry this data belongs to (e.g., "tech-software-development")
-  
+
   // Users in this industry
   users         User[]
-  
+
   // Salary data
   salaryRanges  Json[]    // Array of { role: string, min: float, max: float, median: float, location: string? }
-  
+
   // Industry trends
   growthRate    Float     // Industry growth rate
   demandLevel   String    // "High", "Medium", "Low"
   topSkills     String[]  // Most in-demand skills
-  
+
   // Market conditions
   marketOutlook String    // "Positive", "Neutral", "Negative"
   keyTrends     String[]  // Array of current industry trends
-  
+
   // Learning suggestions
   recommendedSkills String[]  // Skills recommended for the industry
-  
+
   lastUpdated   DateTime  @default(now())
   nextUpdate    DateTime  // Scheduled update time
 
@@ -131,17 +136,17 @@ model IndustryInsight {
 }
 
 model ScheduledCall {
-  id            String    @id @default(uuid())
-  userId        String
-  user          User      @relation(fields: [userId], references: [id])
-  phoneNumber   String    // Recipient phone number
-  scheduledTime DateTime  // When the call should be made
-  recipientName String?   // Optional name of recipient
-  status        String    @default("scheduled") // scheduled, completed, failed, cancelled
-  inngestEventId String?  // Inngest event ID for tracking
-  createdAt     DateTime  @default(now())
-  updatedAt     DateTime  @updatedAt
-  callLog       CallLog?
+  id             String   @id @default(uuid())
+  userId         String
+  phoneNumber    String
+  scheduledTime  DateTime
+  recipientName  String?
+  status         String   @default("scheduled")
+  inngestEventId String?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+  callLog        CallLog?
+  user           User     @relation(fields: [userId], references: [id])
 
   @@index([userId])
   @@index([scheduledTime])
@@ -149,24 +154,66 @@ model ScheduledCall {
 }
 
 model CallLog {
-  id              String    @id @default(uuid())
+  id              String         @id @default(uuid())
   userId          String
-  user            User      @relation(fields: [userId], references: [id])
-  scheduledCallId String?   @unique
-  scheduledCall   ScheduledCall? @relation(fields: [scheduledCallId], references: [id])
-  phoneNumber     String    // Recipient phone number
+  scheduledCallId String?        @unique
+  phoneNumber     String
   recipientName   String?
-  status          String    // completed, failed, no_answer, busy, cancelled
-  duration        Int?      // Duration in seconds
+  status          String
+  duration        Int?
   startedAt       DateTime?
   endedAt         DateTime?
-  recordingUrl    String?   // URL to call recording if available
-  transcript      String?   // Call transcript if available
-  errorMessage    String?   // Error message if call failed
-  createdAt       DateTime  @default(now())
-  updatedAt       DateTime  @updatedAt
+  recordingUrl    String?
+  transcript      String?
+  errorMessage    String?
+  createdAt       DateTime       @default(now())
+  updatedAt       DateTime       @updatedAt
+  scheduledCall   ScheduledCall? @relation(fields: [scheduledCallId], references: [id])
+  user            User           @relation(fields: [userId], references: [id])
 
   @@index([userId])
   @@index([status])
   @@index([createdAt])
+}
+
+model Subscription {
+  id                   String    @id @default(uuid())
+  userId               String    @unique
+  stripeSubscriptionId String?   @unique
+  tier                 String    @default("Free")
+  status               String    @default("active")
+  currentPeriodStart   DateTime?
+  currentPeriodEnd     DateTime?
+  cancelAtPeriodEnd    Boolean   @default(false)
+  canceledAt           DateTime?
+  createdAt            DateTime  @default(now())
+  updatedAt            DateTime  @updatedAt
+  stripeCustomerId     String?
+  stripePriceId        String?
+  paymentMethod        String    @default("stripe") // "stripe" or "web3"
+  walletAddress        String?   // Wallet address if payment method is web3
+  transactionHash      String?   // Blockchain transaction hash for Web3 payments
+  user                 User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([stripeSubscriptionId])
+  @@index([stripeCustomerId])
+  @@index([stripePriceId])
+  @@index([walletAddress])
+}
+
+model UsageTracking {
+  id        String   @id @default(uuid())
+  userId    String
+  feature   String
+  count     Int      @default(0)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  month     DateTime
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, feature, month])
+  @@index([userId])
+  @@index([month])
+  @@index([feature])
 }

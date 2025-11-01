@@ -33,8 +33,37 @@ export default function PerformanceChart({ assessments }) {
     }
   }, [assessments]);
 
+  if (!assessments || assessments.length === 0) {
+    return (
+      <Card className="bg-cream border-3 shadow-neu">
+        <CardHeader className="pb-4">
+          <div className="flex items-center gap-4">
+            <div className="w-12 h-12 rounded-lg bg-zenitsu-yellow/30 border-3 border-black flex items-center justify-center shadow-neu-sm">
+              <TrendingUp className="h-6 w-6 text-charcoal/50" />
+            </div>
+            <div>
+              <CardTitle className="text-2xl md:text-3xl font-black text-charcoal">
+                Performance Trend
+              </CardTitle>
+              <CardDescription className="text-base font-medium text-charcoal/70 mt-1">
+                Your quiz scores over time
+              </CardDescription>
+            </div>
+          </div>
+        </CardHeader>
+        <CardContent>
+          <div className="bg-white border-3 border-black rounded-lg p-8 text-center">
+            <p className="text-base font-medium text-charcoal/50">
+              Complete your first quiz to see your performance trend
+            </p>
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
+
   return (
-    <Card className="bg-cream hover:shadow-neu-hover hover:translate-x-[2px] hover:translate-y-[2px]">
+    <Card className="bg-cream hover:bg-white transition-all border-3 shadow-neu hover:shadow-neu-hover hover:translate-x-[2px] hover:translate-y-[2px]">
       <CardHeader className="pb-4">
         <div className="flex items-center gap-4">
           <div className="w-12 h-12 rounded-lg bg-zenitsu-yellow border-3 border-black flex items-center justify-center shadow-neu-sm">
@@ -58,12 +87,12 @@ export default function PerformanceChart({ assessments }) {
                 <CartesianGrid strokeDasharray="3 3" stroke="#1b1b1b" opacity={0.1} />
                 <XAxis 
                   dataKey="date" 
-                  tick={{ fill: '#1b1b1b', fontWeight: 600 }}
+                  tick={{ fill: '#1b1b1b', fontWeight: 600, fontSize: 12 }}
                   stroke="#1b1b1b"
                 />
                 <YAxis 
                   domain={[0, 100]} 
-                  tick={{ fill: '#1b1b1b', fontWeight: 600 }}
+                  tick={{ fill: '#1b1b1b', fontWeight: 600, fontSize: 12 }}
                   stroke="#1b1b1b"
                 />
                 <Tooltip
@@ -72,7 +101,7 @@ export default function PerformanceChart({ assessments }) {
                       return (
                         <div className="bg-white border-3 border-black rounded-lg p-3 shadow-neu">
                           <p className="text-sm font-bold text-charcoal">
-                            Score: {payload[0].value}%
+                            Score: <span className="text-tanjiro-green">{payload[0].value}%</span>
                           </p>
                           <p className="text-xs font-medium text-charcoal/70">
                             {payload[0].payload.date}
@@ -89,7 +118,7 @@ export default function PerformanceChart({ assessments }) {
                   stroke="#1a4d2e"
                   strokeWidth={3}
                   dot={{ fill: '#1a4d2e', strokeWidth: 2, r: 5, stroke: '#000000' }}
-                  activeDot={{ r: 7, stroke: '#000000', strokeWidth: 2 }}
+                  activeDot={{ r: 7, stroke: '#000000', strokeWidth: 2, fill: '#1a4d2e' }}
                 />
               </LineChart>
             </ResponsiveContainer>

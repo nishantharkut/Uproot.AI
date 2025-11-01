@@ -10,7 +10,7 @@ import {
   Phone,
 } from "lucide-react";
 import Link from "next/link";
-import { SignedIn, SignedOut, SignInButton, UserButton } from "@clerk/nextjs";
+import { SignedIn, SignedOut, SignInButton } from "@clerk/nextjs";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -20,6 +20,8 @@ import {
 import Image from "next/image";
 import { checkUser } from "@/lib/checkUser";
 import { Contact2Icon } from "lucide-react";
+import CustomUserProfileButton from "@/components/custom-user-profile-button";
+import { WalletButton } from "@/components/wallet-button";
 
 export default async function Header() {
   await checkUser();
@@ -37,7 +39,7 @@ export default async function Header() {
               priority
             />
           </div>
-          <span className="logo-font text-2xl md:text-3xl text-tanjiro-green tracking-wider group-hover:text-demon-red transition-colors">
+          <span className="logo-font text-2xl md:text-5xl text-tanjiro-green tracking-wider group-hover:text-demon-red transition-colors">
             UPROOT
           </span>
         </Link>
@@ -52,6 +54,15 @@ export default async function Header() {
               >
                 <LayoutDashboard className="h-5 w-5 mr-2" />
                 Industry Insights
+              </Button>
+            </Link>
+
+            <Link href="/pricing">
+              <Button
+                className="h-11 font-black bg-tanjiro-green text-cream hover:bg-tanjiro-green/90"
+              >
+                <StarsIcon className="h-5 w-5 mr-2" />
+                <span className="hidden sm:inline">Pricing</span>
               </Button>
             </Link>
 
@@ -97,40 +108,23 @@ export default async function Header() {
                   </Link>
                 </DropdownMenuItem>
                 <DropdownMenuItem asChild>
-                  <Link href="/schedule-call" className="flex items-center gap-2">
-                    <Phone className="h-4 w-4" />
-                    Schedule Call
+                  <Link href="/schedule-call" className="flex items-center gap-3 cursor-pointer py-3">
+                    <Phone className="h-5 w-5" />
+                    <span className="font-semibold">Schedule Call</span>
                   </Link>
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
 
+            {/* Wallet Button */}
+            <WalletButton />
+
             {/* User Profile Button */}
-            <div className="relative">
-              <UserButton
-                appearance={{
-                  variables: {
-                    colorPrimary: "#1a4d2e",
-                    colorText: "#1b1b1b",
-                  },
-                  elements: {
-                    avatarBox: "w-12 h-12 border-3 border-black shadow-neu-sm rounded-full",
-                    userButtonAvatar: "rounded-full",
-                    userButtonPopoverCard: "shadow-neu-lg border-4 border-black rounded-xl bg-white",
-                    userPreviewMainIdentifier: "font-bold text-charcoal",
-                    userPreviewSecondaryIdentifier: "font-medium text-charcoal/70",
-                    userButtonPopoverActionButton: "font-semibold hover:bg-tanjiro-green/10 text-charcoal",
-                    userButtonPopoverActionButtonText: "text-charcoal",
-                    userButtonPopoverFooter: "hidden",
-                  },
-                }}
-                afterSignOutUrl="/"
-              />
-            </div>
+            <CustomUserProfileButton />
           </SignedIn>
 
           <SignedOut>
-            <SignInButton mode="redirect" redirectUrl="/sign-in">
+            <SignInButton mode="redirect">
               <Button variant="outline" className="h-11 font-bold">Sign In</Button>
             </SignInButton>
           </SignedOut>

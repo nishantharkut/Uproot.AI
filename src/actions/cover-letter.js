@@ -44,7 +44,7 @@ export async function generateCoverLetter(data) {
 
   try {
     const result = await openai.chat.completions.create({
-      model: "gpt-4o-mini",
+      model: "gpt-4",
       messages: [{ role: "user", content: prompt }],
     });
     const content = result.choices[0].message.content?.trim() || "";

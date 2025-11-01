@@ -17,7 +17,7 @@ const Chatbot = ({ open, onOpenChange }) => {
     {
       role: "assistant",
       content:
-        "Hello! I'm your Sensai AI assistant. I can help you with career guidance, interview preparation, resume building, cover letters, and answer questions about our platform. How can I assist you today?",
+        "Hello! I'm your UPROOT AI assistant. I can help you with career guidance, interview preparation, resume building, cover letters, and answer questions about our platform. How can I assist you today?",
     },
   ]);
   const [input, setInput] = useState("");
@@ -96,11 +96,13 @@ const Chatbot = ({ open, onOpenChange }) => {
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="flex flex-col h-[600px] max-w-2xl p-0">
-        <DialogHeader className="px-6 py-4 border-b">
-          <DialogTitle className="flex items-center gap-2">
-            <Bot className="h-5 w-5 text-primary" />
-            Uproot AI Assistant
+      <DialogContent className="flex flex-col h-[600px] max-w-2xl p-0 border-4 border-black bg-white shadow-neu-lg">
+        <DialogHeader className="px-6 py-4 border-b-4 border-black bg-cream">
+          <DialogTitle className="flex items-center gap-2 text-charcoal">
+            <div className="w-10 h-10 rounded-lg bg-tanjiro-green border-3 border-black flex items-center justify-center shadow-neu-sm">
+              <Bot className="h-5 w-5 text-white" />
+            </div>
+            <span className="logo-font text-xl">UPROOT AI Assistant</span>
           </DialogTitle>
         </DialogHeader>
 
@@ -116,10 +118,10 @@ const Chatbot = ({ open, onOpenChange }) => {
             >
               <div
                 className={cn(
-                  "max-w-[80%] rounded-lg px-4 py-2",
+                  "max-w-[80%] rounded-lg px-4 py-2 border-3 border-black",
                   message.role === "user"
-                    ? "bg-primary text-primary-foreground"
-                    : "bg-muted"
+                    ? "bg-tanjiro-green text-cream shadow-neu-sm"
+                    : "bg-cream text-charcoal shadow-neu-sm"
                 )}
               >
                 <div 
@@ -137,10 +139,10 @@ const Chatbot = ({ open, onOpenChange }) => {
           {/* Thinking Indicator */}
           {isLoading && (
             <div className="flex justify-start">
-              <div className="bg-muted rounded-lg px-4 py-2 max-w-[80%]">
+              <div className="bg-cream border-3 border-black rounded-lg px-4 py-2 max-w-[80%] shadow-neu-sm">
                 <div className="flex items-center gap-2">
-                  <Loader2 className="h-4 w-4 animate-spin" />
-                  <span className="text-sm text-muted-foreground">
+                  <Loader2 className="h-4 w-4 animate-spin text-tanjiro-green" />
+                  <span className="text-sm font-medium text-charcoal">
                     Thinking...
                   </span>
                 </div>
@@ -152,7 +154,7 @@ const Chatbot = ({ open, onOpenChange }) => {
         </div>
 
         {/* Input Area */}
-        <div className="border-t px-6 py-4">
+        <div className="border-t-4 border-black px-6 py-4 bg-cream">
           <div className="flex gap-2">
             <Textarea
               ref={textareaRef}
@@ -160,19 +162,19 @@ const Chatbot = ({ open, onOpenChange }) => {
               onChange={(e) => setInput(e.target.value)}
               onKeyDown={handleKeyPress}
               placeholder="Type your message... (Press Enter to send, Shift+Enter for new line)"
-              className="min-h-[60px] max-h-[120px] resize-none"
+              className="min-h-[60px] max-h-[120px] resize-none border-3 border-black bg-white text-charcoal font-medium"
               disabled={isLoading}
             />
             <Button
               onClick={handleSend}
               disabled={!input.trim() || isLoading}
               size="icon"
-              className="h-[60px] w-[60px] shrink-0"
+              className="h-[60px] w-[60px] shrink-0 border-4 border-black"
             >
               {isLoading ? (
-                <Loader2 className="h-4 w-4 animate-spin" />
+                <Loader2 className="h-5 w-5 animate-spin" />
               ) : (
-                <Send className="h-4 w-4" />
+                <Send className="h-5 w-5" />
               )}
             </Button>
           </div>

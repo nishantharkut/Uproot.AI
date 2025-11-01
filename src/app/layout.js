@@ -3,6 +3,7 @@ import "./globals.css";
 import { ClerkProvider } from "@clerk/nextjs";
 import { Toaster } from "sonner";
 import Header from "@/components/header";
+import GlobalChatbot from "@/components/global-chatbot";
 import { ThemeProvider } from "@/components/theme-provider";
 import { clerkAppearance } from "@/lib/clerk-appearance";
 
@@ -43,16 +44,8 @@ export default function RootLayout({ children }) {
           >
             <Header />
             <main className="min-h-screen">{children}</main>
-            <Toaster 
-              richColors 
-              position="bottom-right"
-              toastOptions={{
-                style: {
-                  marginBottom: '20px',
-                  marginRight: '20px',
-                },
-              }}
-            />
+            <GlobalChatbot />
+            <Toaster richColors />
           </ThemeProvider>
         </body>
       </html>

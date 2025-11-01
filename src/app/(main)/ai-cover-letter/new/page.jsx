@@ -3,6 +3,9 @@ import { ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import CoverLetterGenerator from "../_components/cover-letter-generator";
 
+// Force dynamic rendering to avoid Clerk build issues
+export const dynamic = 'force-dynamic';
+
 export default function NewCoverLetterPage() {
   return (
     <div className="min-h-screen bg-cream py-12">
