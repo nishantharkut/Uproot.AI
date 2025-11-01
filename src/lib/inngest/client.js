@@ -4,8 +4,8 @@ export const inngest = new Inngest({
   id: "career-coach", // Unique app ID
   name: "Career Coach",
   credentials: {
-    gemini: {
-      apiKey: process.env.GEMINI_API_KEY,
+    openai: {
+      apiKey: process.env.OPENAI_API_KEY,
     },
   },
 });

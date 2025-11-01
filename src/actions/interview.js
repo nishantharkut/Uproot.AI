@@ -2,10 +2,9 @@
 
 import { db } from "@/lib/prisma";
 import { auth } from "@clerk/nextjs/server";
-import { GoogleGenerativeAI } from "@google/generative-ai";
+import OpenAI from "openai";
 
-const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
-const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash-lite" });
+const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 
 export async function generateQuiz() {
   const { userId } = await auth();
@@ -48,31 +47,13 @@ export async function generateQuiz() {
   `;
 
   try {
-    const result = await model.generateContent(prompt);
-    const response = result.response;
-    let text = response.text();
-    
-    // More aggressive cleaning
-    text = text.trim();
-    // Remove markdown code blocks
-    text = text.replace(/```(?:json)?\n?/g, "");
-    text = text.replace(/```\n?/g, "");
-    // Remove any leading/trailing whitespace
-    text = text.trim();
-    
-    // Try to find JSON object in the text
-    const jsonMatch = text.match(/\{[\s\S]*\}/);
-    if (jsonMatch) {
-      text = jsonMatch[0];
-    }
-    
-    console.log("Cleaned text:", text.substring(0, 200)); // Log first 200 chars for debugging
-    
-    const quiz = JSON.parse(text);
-
-    if (!quiz.questions || !Array.isArray(quiz.questions)) {
-      throw new Error("Invalid quiz format");
-    }
+    const result = await openai.chat.completions.create({
+      model: "gpt-4o-mini",
+      messages: [{ role: "user", content: prompt }],
+    });
+    const text = result.choices[0].message.content || "";
+    const cleanedText = text.replace(/```(?:json)?\n?/g, "").trim();
+    const quiz = JSON.parse(cleanedText);
 
     return quiz.questions;
   } catch (error) {
@@ -125,9 +106,12 @@ export async function saveQuizResult(questions, answers, score) {
     `;
 
     try {
-      const tipResult = await model.generateContent(improvementPrompt);
+      const tipResult = await openai.chat.completions.create({
+        model: "gpt-4o-mini",
+        messages: [{ role: "user", content: improvementPrompt }],
+      });
 
-      improvementTip = tipResult.response.text().trim();
+      improvementTip = tipResult.choices[0].message.content?.trim() || "";
       console.log(improvementTip);
     } catch (error) {
       console.error("Error generating improvement tip:", error);
