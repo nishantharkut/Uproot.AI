@@ -11,7 +11,16 @@ const isProtectedRoute = createRouteMatcher([
 
 export default clerkMiddleware(async (auth, req) => {
   try {
-    const { userId } = await auth();
+    // Try to get userId - if Clerk is not configured, this will throw an error
+    let userId;
+    try {
+      const authResult = await auth();
+      userId = authResult.userId;
+    } catch (authError) {
+      // If Clerk auth fails (missing keys), log and allow request through
+      console.warn("Clerk authentication check failed - middleware bypassed:", authError.message);
+      return NextResponse.next();
+    }
 
     // Always allow access to public pages
     const pathname = req.nextUrl.pathname;
