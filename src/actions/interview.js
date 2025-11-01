@@ -2,10 +2,9 @@
 
 import { db } from "@/lib/prisma";
 import { auth } from "@clerk/nextjs/server";
-import { GoogleGenerativeAI } from "@google/generative-ai";
+import OpenAI from "openai";
 
-const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
-const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash-lite" });
+const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 
 export async function generateQuiz() {
   const { userId } = await auth();
@@ -44,9 +43,11 @@ export async function generateQuiz() {
   `;
 
   try {
-    const result = await model.generateContent(prompt);
-    const response = result.response;
-    const text = response.text();
+    const result = await openai.chat.completions.create({
+      model: "gpt-4o-mini",
+      messages: [{ role: "user", content: prompt }],
+    });
+    const text = result.choices[0].message.content || "";
     const cleanedText = text.replace(/```(?:json)?\n?/g, "").trim();
     const quiz = JSON.parse(cleanedText);
 
@@ -100,9 +101,12 @@ export async function saveQuizResult(questions, answers, score) {
     `;
 
     try {
-      const tipResult = await model.generateContent(improvementPrompt);
+      const tipResult = await openai.chat.completions.create({
+        model: "gpt-4o-mini",
+        messages: [{ role: "user", content: improvementPrompt }],
+      });
 
-      improvementTip = tipResult.response.text().trim();
+      improvementTip = tipResult.choices[0].message.content?.trim() || "";
       console.log(improvementTip);
     } catch (error) {
       console.error("Error generating improvement tip:", error);

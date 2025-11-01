@@ -1,9 +1,8 @@
 import { db } from "@/lib/prisma";
 import { inngest } from "./client";
-import { GoogleGenerativeAI } from "@google/generative-ai";
+import OpenAI from "openai";
 
-const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
-const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash-lite" });
+const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 
 export const generateIndustryInsights = inngest.createFunction(
   { name: "Generate Industry Insights" },
@@ -37,14 +36,17 @@ export const generateIndustryInsights = inngest.createFunction(
         `;
 
       const res = await step.ai.wrap(
-        "gemini",
+        "openai",
         async (p) => {
-          return await model.generateContent(p);
+          return await openai.chat.completions.create({
+            model: "gpt-4o-mini",
+            messages: [{ role: "user", content: p }],
+          });
         },
         prompt
       );
 
-      const text = res.response.candidates[0].content.parts[0].text || "";
+      const text = res.choices[0].message.content || "";
       const cleanedText = text.replace(/```(?:json)?\n?/g, "").trim();
 
       const insights = JSON.parse(cleanedText);
