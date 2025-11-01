@@ -11,49 +11,62 @@ export async function updateUser(data) {
 
   // Get user from Clerk to create new user if needed
   const clerkUser = await currentUser();
-
+  // Generate insights outside the transaction — external network calls should not run inside a DB transaction
+  let generatedInsights = null;
   try {
-    // Start a transaction to handle both operations
+    // Check if an industryInsight already exists first (read-only)
+    const existing = await db.industryInsight.findUnique({ where: { industry: data.industry } });
+    if (!existing) {
+      try {
+        generatedInsights = await generateAIInsights(data.industry);
+      } catch (genErr) {
+        // Log but do not block profile update; we'll proceed without creating industryInsight
+        console.error('Error generating industry insights (will continue without insights):', genErr);
+        generatedInsights = null;
+      }
+    }
+
+    // Start a transaction to create/update user and optionally create the industryInsight
     const result = await db.$transaction(
       async (tx) => {
         // Check if user exists, create if not
-        let user = await tx.user.findUnique({
-          where: { clerkUserId: userId },
-        });
+        let user = await tx.user.findUnique({ where: { clerkUserId: userId } });
 
         if (!user) {
           // Create new user if they don't exist
           if (!clerkUser) {
-            throw new Error("Clerk user not found");
+            throw new Error('Clerk user not found');
           }
 
-          const name = `${clerkUser.firstName || ""} ${clerkUser.lastName || ""}`.trim() || "User";
-          
+          const name = `${clerkUser.firstName || ''} ${clerkUser.lastName || ''}`.trim() || 'User';
+
           user = await tx.user.create({
             data: {
               clerkUserId: userId,
               name,
               imageUrl: clerkUser.imageUrl,
-              email: clerkUser.emailAddresses[0]?.emailAddress || "",
+              email: clerkUser.emailAddresses[0]?.emailAddress || '',
             },
           });
         }
 
-        // First check if industry exists
-        let industryInsight = await tx.industryInsight.findUnique({
-          where: {
-            industry: data.industry,
-          },
-        });
-
-        // If industry doesn't exist, create it with default values
-        if (!industryInsight) {
-          const insights = await generateAIInsights(data.industry);
+        // If we generated insights earlier and there isn't an existing record, create it within the transaction
+        let industryInsight = await tx.industryInsight.findUnique({ where: { industry: data.industry } });
+        if (!industryInsight && generatedInsights) {
+          const safeGen = {
+            salaryRanges: generatedInsights?.salaryRanges || [],
+            growthRate: typeof generatedInsights?.growthRate === 'number' ? generatedInsights.growthRate : parseFloat(generatedInsights?.growthRate) || 0,
+            demandLevel: generatedInsights?.demandLevel || 'Medium',
+            topSkills: generatedInsights?.topSkills || [],
+            marketOutlook: generatedInsights?.marketOutlook || 'Neutral',
+            keyTrends: generatedInsights?.keyTrends || [],
+            recommendedSkills: generatedInsights?.recommendedSkills || [],
+          };
 
           industryInsight = await tx.industryInsight.create({
             data: {
               industry: data.industry,
-              ...insights,
+              ...safeGen,
               nextUpdate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
             },
           });
@@ -61,9 +74,7 @@ export async function updateUser(data) {
 
         // Now update the user
         const updatedUser = await tx.user.update({
-          where: {
-            id: user.id,
-          },
+          where: { id: user.id },
           data: {
             industry: data.industry,
             experience: data.experience,
@@ -74,16 +85,14 @@ export async function updateUser(data) {
 
         return { updatedUser, industryInsight };
       },
-      {
-        timeout: 10000, // default: 5000
-      }
+      { timeout: 10000 }
     );
 
-    revalidatePath("/");
+    revalidatePath('/');
     return { success: true, user: result.updatedUser };
   } catch (error) {
-    console.error("Error updating user and industry:", error.message);
-    throw new Error("Failed to update profile");
+    console.error('Error updating user and industry:', error?.message || error);
+    throw new Error('Failed to update profile');
   }
 }
 
