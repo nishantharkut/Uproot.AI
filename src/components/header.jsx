@@ -16,6 +16,7 @@ import {
   Contact2Icon,
   Settings,
   Home,
+  UserCircle,
 } from "lucide-react";
 import Link from "next/link";
 import { SignedIn, SignedOut, SignInButton, useUser } from "@clerk/nextjs";
@@ -150,9 +151,18 @@ function MobileMenu() {
                 Contact Us
               </NavLink>
 
-              <NavLink href="/settings/subscription" icon={Settings} mobile>
-                Settings
-              </NavLink>
+              {/* Settings Section */}
+              <div className="space-y-2">
+                <div className="text-xs font-black text-charcoal/60 uppercase tracking-wider px-2 mb-1">
+                  Settings
+                </div>
+                <NavLink href="/onboarding" icon={UserCircle} mobile>
+                  Edit Profile
+                </NavLink>
+                <NavLink href="/settings/subscription" icon={Settings} mobile>
+                  Subscription
+                </NavLink>
+              </div>
 
               {/* Account Section */}
               <div className="pt-4 mt-4 border-t-3 border-black">
@@ -328,6 +338,18 @@ export default function Header() {
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="w-56 border-3 border-black bg-cream">
+                <DropdownMenuItem asChild>
+                  <Link 
+                    href="/onboarding"
+                    className={cn(
+                      "flex items-center gap-3 cursor-pointer py-2.5 transition-colors",
+                      pathname?.includes("/onboarding") && "bg-tanjiro-green/10"
+                    )}
+                  >
+                    <UserCircle className="h-5 w-5" />
+                    <span className="font-semibold">Edit Profile</span>
+                  </Link>
+                </DropdownMenuItem>
                 <DropdownMenuItem asChild>
                   <Link 
                     href="/settings/subscription"

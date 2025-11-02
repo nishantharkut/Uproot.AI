@@ -30,15 +30,41 @@ import useFetch from "@/hooks/use-fetch";
 import { onboardingSchema } from "@/app/lib/schema";
 import { updateUser } from "@/actions/user";
 
-const OnboardingForm = ({ industries }) => {
+const OnboardingForm = ({ industries, initialData }) => {
   const router = useRouter();
   const [selectedIndustry, setSelectedIndustry] = useState(null);
+  const isEditMode = !!initialData?.industry;
 
   const {
     loading: updateLoading,
     fn: updateUserFn,
     data: updateResult,
   } = useFetch(updateUser);
+
+  // Parse industry format: "tech-software-development" -> { industry: "tech", subIndustry: "Software Development" }
+  const parseIndustry = (industryString) => {
+    if (!industryString) return { industry: null, subIndustry: null };
+
+    const parts = industryString.split("-");
+    if (parts.length < 2) return { industry: null, subIndustry: null };
+
+    const industryId = parts[0];
+    const subIndustrySlug = parts.slice(1).join("-");
+
+    // Find the industry to get the subIndustry name
+    const industryObj = industries.find((ind) => ind.id === industryId);
+    if (!industryObj) return { industry: null, subIndustry: null };
+
+    // Find the subIndustry by matching the slug
+    const subIndustry = industryObj.subIndustries.find(
+      (sub) => sub.toLowerCase().replace(/ /g, "-") === subIndustrySlug
+    );
+
+    return {
+      industry: industryId,
+      subIndustry: subIndustry || null,
+    };
+  };
 
   const {
     register,
@@ -48,7 +74,44 @@ const OnboardingForm = ({ industries }) => {
     watch,
   } = useForm({
     resolver: zodResolver(onboardingSchema),
+    defaultValues: {
+      industry: "",
+      subIndustry: "",
+      experience: "",
+      skills: "",
+      bio: "",
+    },
   });
+
+  // Load initial data when component mounts or initialData changes
+  useEffect(() => {
+    if (initialData) {
+      const { industry: industryId, subIndustry: subIndustryName } = parseIndustry(initialData.industry);
+      
+      if (industryId) {
+        const industryObj = industries.find((ind) => ind.id === industryId);
+        if (industryObj) {
+          setSelectedIndustry(industryObj);
+          setValue("industry", industryId);
+          if (subIndustryName) {
+            setValue("subIndustry", subIndustryName);
+          }
+        }
+      }
+
+      if (initialData.experience !== null && initialData.experience !== undefined) {
+        setValue("experience", initialData.experience.toString());
+      }
+
+      if (initialData.skills && initialData.skills.length > 0) {
+        setValue("skills", initialData.skills.join(", "));
+      }
+
+      if (initialData.bio) {
+        setValue("bio", initialData.bio);
+      }
+    }
+  }, [initialData, industries, setValue]);
 
   const onSubmit = async (values) => {
     try {
@@ -67,11 +130,11 @@ const OnboardingForm = ({ industries }) => {
 
   useEffect(() => {
     if (updateResult?.success && !updateLoading) {
-      toast.success("Profile completed successfully!");
+      toast.success(isEditMode ? "Profile updated successfully!" : "Profile completed successfully!");
       router.push("/dashboard");
       router.refresh();
     }
-  }, [updateResult, updateLoading]);
+  }, [updateResult, updateLoading, isEditMode, router]);
 
   const watchIndustry = watch("industry");
 
@@ -80,11 +143,12 @@ const OnboardingForm = ({ industries }) => {
       <Card className="w-full max-w-2xl">
         <CardHeader className="space-y-4">
           <CardTitle className="text-4xl md:text-5xl font-black text-charcoal logo-font text-center">
-            COMPLETE YOUR PROFILE
+            {isEditMode ? "EDIT YOUR PROFILE" : "COMPLETE YOUR PROFILE"}
           </CardTitle>
           <CardDescription className="text-center text-base md:text-lg font-semibold text-charcoal">
-            Select your industry to get personalized career insights and
-            recommendations.
+            {isEditMode
+              ? "Update your profile information to get personalized career insights and recommendations."
+              : "Select your industry to get personalized career insights and recommendations."}
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -92,6 +156,7 @@ const OnboardingForm = ({ industries }) => {
             <div className="space-y-2">
               <Label htmlFor="industry">Industry</Label>
               <Select
+                value={watchIndustry || ""}
                 onValueChange={(value) => {
                   setValue("industry", value);
                   setSelectedIndustry(
@@ -125,6 +190,7 @@ const OnboardingForm = ({ industries }) => {
               <div className="space-y-2">
                 <Label htmlFor="subIndustry">Specialization</Label>
                 <Select
+                  value={watch("subIndustry") || ""}
                   onValueChange={(value) => setValue("subIndustry", value)}
                 >
                   <SelectTrigger id="subIndustry">
@@ -201,7 +267,7 @@ const OnboardingForm = ({ industries }) => {
                   Saving...
                 </>
               ) : (
-                "Complete Profile"
+                isEditMode ? "Update Profile" : "Complete Profile"
               )}
             </Button>
           </form>

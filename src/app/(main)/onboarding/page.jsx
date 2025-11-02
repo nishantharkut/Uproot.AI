@@ -1,22 +1,17 @@
-import { redirect } from "next/navigation";
 import { industries } from "@/data/industries";
 import OnboardingForm from "./_components/onboarding-form";
-import { getUserOnboardingStatus } from "@/actions/user";
+import { getUserProfile } from "@/actions/user";
 
 // Force dynamic rendering to avoid Clerk build issues
 export const dynamic = 'force-dynamic';
 
 export default async function OnboardingPage() {
-  // Check if user is already onboarded
-  const { isOnboarded } = await getUserOnboardingStatus();
-
-  if (isOnboarded) {
-    redirect("/dashboard");
-  }
+  // Get user profile data if exists (for editing)
+  const { user: userProfile } = await getUserProfile();
 
   return (
     <main>
-      <OnboardingForm industries={industries} />
+      <OnboardingForm industries={industries} initialData={userProfile} />
     </main>
   );
 }

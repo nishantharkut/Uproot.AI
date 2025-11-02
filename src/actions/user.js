@@ -119,3 +119,33 @@ export async function getUserOnboardingStatus() {
     };
   }
 }
+
+export async function getUserProfile() {
+  const { userId } = await auth();
+  if (!userId) throw new Error("Unauthorized");
+
+  try {
+    const user = await db.user.findUnique({
+      where: {
+        clerkUserId: userId,
+      },
+      select: {
+        industry: true,
+        experience: true,
+        bio: true,
+        skills: true,
+      },
+    });
+
+    return {
+      success: true,
+      user: user || null,
+    };
+  } catch (error) {
+    console.error("Error fetching user profile:", error);
+    return {
+      success: false,
+      user: null,
+    };
+  }
+}

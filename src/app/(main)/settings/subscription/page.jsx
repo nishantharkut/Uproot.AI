@@ -12,7 +12,8 @@ import {
   CheckCircle2,
   ExternalLink,
   ArrowUpRight,
-  Loader2
+  Loader2,
+  UserCircle
 } from "lucide-react";
 import Link from "next/link";
 import UsageMeters from "./_components/usage-meters";
@@ -90,13 +91,43 @@ export default function SubscriptionPage() {
     <div className="min-h-screen pt-32 pb-20 px-4">
       <div className="container mx-auto max-w-5xl space-y-8">
         {/* Header */}
+        <div className="flex items-start justify-between">
+          <div>
+            <h1 className="logo-font text-4xl md:text-5xl text-charcoal mb-2">
+              Settings
+            </h1>
+            <p className="text-lg text-charcoal/80 font-medium">
+              Manage your account, subscription and billing
+            </p>
+          </div>
+        </div>
+
+        {/* Edit Profile Card */}
+        <Card className="bg-cream border-4 border-black shadow-neu">
+          <CardHeader>
+            <CardTitle className="text-2xl font-black text-charcoal flex items-center gap-3">
+              <UserCircle className="h-6 w-6" />
+              Profile Information
+            </CardTitle>
+            <CardDescription className="text-base font-medium">
+              Update your industry, experience, skills, and professional bio
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <Link href="/onboarding">
+              <Button className="w-full sm:w-auto h-12 text-base font-bold">
+                <UserCircle className="h-5 w-5 mr-2" />
+                Edit Profile
+              </Button>
+            </Link>
+          </CardContent>
+        </Card>
+
+        {/* Subscription Section */}
         <div>
-          <h1 className="logo-font text-4xl md:text-5xl text-charcoal mb-2">
+          <h2 className="logo-font text-3xl md:text-4xl text-charcoal mb-6">
             Subscription
-          </h1>
-          <p className="text-lg text-charcoal/80 font-medium">
-            Manage your subscription and billing
-          </p>
+          </h2>
         </div>
 
         {/* Current Plan Card */}
