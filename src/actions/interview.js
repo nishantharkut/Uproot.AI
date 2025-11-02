@@ -21,7 +21,6 @@ export async function generateQuiz() {
 
   if (!user) throw new Error("User not found");
 
-  // Check and increment usage for quiz
   await useFeature("quiz");
 
   const prompt = `
@@ -85,10 +84,8 @@ export async function saveQuizResult(questions, answers, score) {
     explanation: q.explanation,
   }));
 
-  // Get wrong answers
   const wrongAnswers = questionResults.filter((q) => !q.isCorrect);
 
-  // Only generate improvement tips if there are wrong answers
   let improvementTip = null;
   if (wrongAnswers.length > 0) {
     const wrongQuestionsText = wrongAnswers
@@ -119,7 +116,6 @@ export async function saveQuizResult(questions, answers, score) {
       console.log(improvementTip);
     } catch (error) {
       console.error("Error generating improvement tip:", error);
-      // Continue without improvement tip if generation fails
     }
   }
 
@@ -167,3 +163,4 @@ export async function getAssessments() {
     throw new Error("Failed to fetch assessments");
   }
 }
+
