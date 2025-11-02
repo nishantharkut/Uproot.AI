@@ -112,7 +112,7 @@ function MobileMenu() {
             <>
               {/* Quick Links */}
               <div>
-                <NavLink href="/" icon={Home} mobile>
+                <NavLink href="/dashboard" icon={Home} mobile>
                   Home
                 </NavLink>
               </div>
@@ -211,13 +211,14 @@ function MobileMenu() {
 
 export default function Header() {
   const pathname = usePathname();
+  const { isSignedIn } = useUser();
 
   return (
     <header className="fixed top-0 w-full border-b-4 border-black bg-white z-50 shadow-neu">
       <nav className="container mx-auto px-3 sm:px-4 h-20 flex items-center justify-between gap-4">
         {/* Logo */}
         <Link 
-          href="/" 
+          href={isSignedIn ? "/dashboard" : "/"} 
           className="flex items-center gap-2 sm:gap-3 group flex-shrink-0 min-w-0"
         >
           <div className="relative w-11 h-11 sm:w-12 sm:h-12 md:w-14 md:h-14 border-3 border-black rounded-lg shadow-neu-sm group-hover:shadow-neu group-hover:translate-x-[2px] group-hover:translate-y-[2px] transition-all overflow-hidden bg-white flex-shrink-0">

@@ -31,8 +31,18 @@ import { testimonial } from "@/data/testimonial";
 import { faqs } from "@/data/faqs";
 import { howItWorks } from "@/data/howItWorks";
 import { FeaturesSectionDemo } from "@/components/feature";
+import { auth } from "@clerk/nextjs/server";
+import { redirect } from "next/navigation";
 
-export default function LandingPage() {
+// Force dynamic rendering to check authentication
+export const dynamic = 'force-dynamic';
+
+export default async function LandingPage() {
+  // Redirect logged-in users to dashboard
+  const { userId } = await auth();
+  if (userId) {
+    redirect("/dashboard");
+  }
   return (
     <>
       {/* Hero Section */}
