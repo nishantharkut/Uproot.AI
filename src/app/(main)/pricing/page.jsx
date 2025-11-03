@@ -17,7 +17,9 @@ import {
   AlertCircle,
   ArrowRight,
   HelpCircle,
-  TrendingUp
+  TrendingUp,
+  Smartphone,
+  Clock
 } from "lucide-react";
 import { toast } from "sonner";
 import { useWeb3 } from "@/hooks/useWeb3";
@@ -643,6 +645,24 @@ function PricingPageContent() {
                 <ArrowRight className="h-5 w-5 text-charcoal" />
               </Button>
 
+              {/* UPI Coming Soon Option */}
+              <div className="w-full h-20 flex items-center justify-start gap-4 bg-white/80 border-4 border-charcoal/30 shadow-neu-sm cursor-not-allowed relative">
+                <div className="w-12 h-12 border-4 bg-violet-500/10 border-violet-500/40 flex items-center justify-center opacity-70">
+                  <Smartphone className="h-6 w-6 text-violet-500/60" />
+                </div>
+                <div className="flex-1 text-left">
+                  <div className="font-black text-base text-charcoal/70 mb-1 flex items-center gap-2">
+                    UPI Payment
+                    <Badge className="bg-earthy-orange/25 text-earthy-orange border-3 border-earthy-orange/60 px-2.5 py-0.5 text-xs font-black flex items-center gap-1 shadow-neu-sm">
+                      <Clock className="h-3 w-3" />
+                      Coming Soon
+                    </Badge>
+                  </div>
+                  <div className="text-xs text-charcoal/55 font-bold">UPI integration coming soon • PhonePE, GPay, Paytm</div>
+                </div>
+                <div className="absolute inset-0 bg-cream/40 pointer-events-none rounded-lg" />
+              </div>
+
               {/* Web3 Option */}
               <Button
                 onClick={() => handlePaymentMethodSelection("web3")}
@@ -858,7 +878,7 @@ function PricingPageContent() {
                       What payment methods do you accept?
                     </h3>
                     <p className="text-sm text-charcoal/80 font-semibold leading-relaxed">
-                      We accept credit/debit cards via Stripe and cryptocurrency (ETH) via MetaMask. All payments are secure and encrypted.
+                      We accept credit/debit cards via Stripe and cryptocurrency (ETH) via MetaMask. UPI integration (PhonePE, GPay, Paytm) coming soon. All payments are secure and encrypted.
                     </p>
                   </div>
                 </div>
