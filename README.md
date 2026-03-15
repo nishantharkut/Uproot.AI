@@ -2,7 +2,7 @@
 
 <div align="center">
 
-![Uproot Logo](public/logo-uproot.webp)
+<img src="./public/logo-uproot.webp" alt="Uproot Logo" width="120" />
 
 **An AI-powered career coaching platform that helps professionals accelerate their career growth through intelligent resume building, cover letter generation, interview preparation, and industry insights.**
 
@@ -16,7 +16,7 @@
 
 ---
 
-## 📋 Table of Contents
+## Table of Contents
 
 - [Overview](#overview)
 - [Features](#features)
@@ -33,7 +33,7 @@
 
 ---
 
-## 🎯 Overview
+## Overview
 
 **Uproot** is a comprehensive career development platform that leverages artificial intelligence to help professionals:
 
@@ -49,7 +49,7 @@ The platform follows a freemium business model with tiered subscriptions (Free, 
 
 ---
 
-## ✨ Features
+## Features
 
 ### Core Features
 
@@ -108,7 +108,7 @@ The platform follows a freemium business model with tiered subscriptions (Free, 
 
 ---
 
-## 🛠 Tech Stack
+## Tech Stack
 
 ### Frontend
 - **Next.js 15.1.7** - React framework with App Router
@@ -141,7 +141,7 @@ The platform follows a freemium business model with tiered subscriptions (Free, 
 
 ---
 
-## 🗄 Database Schema
+## Database Schema
 
 ### Entity Relationship Diagram
 
@@ -504,7 +504,7 @@ Industry-specific insights including salary ranges, growth rates, skills, trends
 
 ---
 
-## 📁 Project Structure
+## Project Structure
 
 ```
 Team-Potato-Coders/
@@ -584,7 +584,7 @@ Team-Potato-Coders/
 
 ---
 
-## 🚀 Installation
+## Installation
 
 ### Prerequisites
 
@@ -638,7 +638,7 @@ Team-Potato-Coders/
 
 ---
 
-## 🔐 Environment Variables
+## Environment Variables
 
 Create a `.env` file in the root directory with the following variables:
 
@@ -681,7 +681,7 @@ PHONEPE_SALT_INDEX="your-phonepe-salt-index"
 
 ---
 
-## 📖 Usage
+## Usage
 
 ### Development
 
@@ -717,7 +717,7 @@ pnpm prisma migrate reset
 
 ---
 
-## 🔌 API Endpoints
+## API Endpoints
 
 ### Authentication
 - `POST /api/auth/signup` - User registration
@@ -754,76 +754,7 @@ pnpm prisma migrate reset
 
 ---
 
-## 🔗 Database Relationships
-
-### One-to-Many Relationships
-
-1. **User → Account** (1:N)
-   - One user can have multiple OAuth accounts
-
-2. **User → Session** (1:N)
-   - One user can have multiple active sessions
-
-3. **User → Resume** (1:N)
-   - One user can create multiple resumes
-
-4. **User → CoverLetter** (1:N)
-   - One user can create multiple cover letters
-
-5. **User → Assessment** (1:N)
-   - One user can take multiple assessments
-
-6. **User → ScheduledCall** (1:N)
-   - One user can schedule multiple calls
-
-7. **User → CallLog** (1:N)
-   - One user can have multiple call logs
-
-8. **User → UsageTracking** (1:N)
-   - One user can have multiple usage tracking records
-
-9. **Resume → ResumeVersion** (1:N)
-   - One resume can have multiple versions
-
-10. **IndustryInsight → User** (1:N)
-    - One industry can have multiple users
-
-### One-to-One Relationships
-
-1. **User → Subscription** (1:1)
-   - One user has exactly one subscription
-
-2. **ScheduledCall → CallLog** (1:1)
-   - One scheduled call generates one call log
-
-### Many-to-Many Relationships
-
-None directly defined, but implemented through junction fields.
-
-### Key Constraints
-
-- **Unique Constraints:**
-  - User email (unique)
-  - User stripeCustomerId (unique)
-  - User walletAddress (unique)
-  - Resume publicLinkId (unique)
-  - Subscription userId (unique)
-  - Subscription stripeSubscriptionId (unique)
-  - Account provider + providerAccountId (unique)
-  - Session sessionToken (unique)
-
-- **Indexes:**
-  - Foreign key fields are indexed for performance
-  - Frequently queried fields (status, createdAt, month) are indexed
-  - Composite indexes for unique constraints
-
-- **Cascade Deletes:**
-  - Account, Session, Subscription, UsageTracking are deleted when User is deleted
-  - ResumeVersion is deleted when Resume is deleted
-
----
-
-## 🧪 Testing
+## Testing
 
 ```bash
 # Run tests (if implemented)
@@ -838,7 +769,7 @@ pnpm test:coverage
 
 ---
 
-## 📝 Contributing
+## Contributing
 
 1. Fork the repository
 2. Create a feature branch (`git checkout -b feature/AmazingFeature`)
@@ -855,19 +786,13 @@ pnpm test:coverage
 
 ---
 
-## 📄 License
+## License
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
 ---
 
-## 👥 Team
-
-**Team Potato Coders** - NIT Delhi DBMS End Semester Project
-
----
-
-## 🙏 Acknowledgments
+## Acknowledgments
 
 - Next.js team for the amazing framework
 - Prisma for the excellent ORM
@@ -876,13 +801,13 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ---
 
-## 📞 Support
+## Support
 
-For support, email support@uproot.com or create an issue in the repository.
+For support, create an issue in the repository.
 
 ---
 
-## 🗺 Roadmap
+## Roadmap
 
 - [ ] Enterprise tier implementation
 - [ ] Advanced analytics dashboard
@@ -893,6 +818,4 @@ For support, email support@uproot.com or create an issue in the repository.
 - [ ] Video interview practice
 - [ ] LinkedIn integration
 
----
 
-**Made with ❤️ by Team Potato Coders**
