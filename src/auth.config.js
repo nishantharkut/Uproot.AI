@@ -1,10 +1,5 @@
-import { PrismaAdapter } from "@auth/prisma-adapter";
-import { db } from "@/lib/prisma";
-import bcrypt from "bcryptjs";
-import Credentials from "next-auth/providers/credentials";
-
 export const authConfig = {
-  adapter: PrismaAdapter(db),
+  // Keep this file Edge-safe; Node-only dependencies are wired in src/auth.js.
   trustHost: true, // Fix for Vercel deployment
   session: {
     strategy: "jwt",
@@ -29,44 +24,7 @@ export const authConfig = {
     error: "/sign-in",
     newUser: "/onboarding",
   },
-  providers: [
-    Credentials({
-      name: "credentials",
-      credentials: {
-        email: { label: "Email", type: "email" },
-        password: { label: "Password", type: "password" },
-      },
-      async authorize(credentials) {
-        if (!credentials?.email || !credentials?.password) {
-          throw new Error("Email and password required");
-        }
-
-        const user = await db.user.findUnique({
-          where: { email: credentials.email },
-        });
-
-        if (!user || !user.password) {
-          throw new Error("Invalid email or password");
-        }
-
-        const isPasswordValid = await bcrypt.compare(
-          credentials.password,
-          user.password
-        );
-
-        if (!isPasswordValid) {
-          throw new Error("Invalid email or password");
-        }
-
-        return {
-          id: user.id,
-          email: user.email,
-          name: user.name,
-          image: user.imageUrl,
-        };
-      },
-    }),
-  ],
+  providers: [],
   callbacks: {
     async jwt({ token, user, trigger, session }) {
       if (user) {
